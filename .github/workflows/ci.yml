@@ -10,28 +10,32 @@ jobs:
       - name: 00. Checkout Code
         uses: actions/checkout@v5
 
-      - name: 0. Set up Java
-        uses: actions/setup-java@v5
+      - name: Set up Java 22
+        uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '22'
-          cache: 'maven'
+          cache: maven
 
-      - name: 0. Install Pact CLI
+      - name: Install Pact CLI
         run: |
           curl -fsSL https://github.com/pact-foundation/pact-ruby-standalone/releases/download/v2.4.5/pact-2.4.5-linux-x86_64.tar.gz | tar xz -C $HOME
           echo "$HOME/pact/bin" >> $GITHUB_PATH
 
-      - name: 1. Start Pact Broker
+      - name: 1.Start Pact Broker
         run: |
-          docker compose -f src/test/resources/docker/docker-compose.pact-broker.yml down -v
+          docker compose -f src/test/resources/docker/docker-compose.pact-broker.yml down -v || true
           docker compose -f src/test/resources/docker/docker-compose.pact-broker.yml up -d --wait
 
-      - name: 2. Run Consumer Tests & Publish Contracts
+      - name: Verify Broker is reachable
         run: |
-          mvn -Dtest=PosOmsConsumerPactTest test
+          curl -sf http://127.0.0.1:9292/diagnostic/status/heartbeat \
+            && echo " Broker is up"
 
-      - name: 3. Consumer Publish Contracts to the Borker
+      - name: 2.Run Consumer Pact Tests & Publish Contracts
+        run: mvn -Dtest=PosOmsConsumerPactTest test
+
+      - name: 3.Publish Consumer Pacts to the Broker
         run: |
           pact-broker publish target/pacts \
             --consumer-app-version=${{ github.sha }} \
@@ -40,13 +44,17 @@ jobs:
 
       - name: 4. Run Provider Verification
         run: |
-          mvn -Dtest=OmsProviderVerification \
-              -Dgit.sha=${{ github.sha }} \
-              -Dpactbroker.host=127.0.0.1 \
-              -Dpactbroker.port=9292 \
-              test
+          mvn \
+            -Dtest=OmsProviderVerification \
+            -Dpact.verifier.publishResults=true \
+            -Dpact.provider.version=${{ github.sha }} \
+            -Dpact.provider.branch=main \
+            -Dpactbroker.host=127.0.0.1 \
+            -Dpactbroker.port=9292 \
+            test
 
-      - name: 5. Record provider deployment to production
+
+      - name: 5.Record Provider Deploymentto production
         run: |
           pact-broker record-deployment \
             --pacticipant oms-provider \
@@ -63,3 +71,4 @@ jobs:
           --version $CONTRACT_VERSION \
           --to-environment production \
           --broker-base-url http://127.0.0.1:9292
+ 
