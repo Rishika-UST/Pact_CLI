@@ -18,29 +18,28 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 
 
 @Provider("oms-provider")
-@PactBroker(url = "http://localhost:9292")
+@PactBroker(url = "http://127.0.0.1:9292", enablePendingPacts = "true", providerBranch = "main", includeWipPactsSince = "2026-06-26")
 public class OmsProviderVerification {
 
     @RegisterExtension
-    private static final WireMockExtension wireMock =
-            WireMockExtension.newInstance()
-                    .options(wireMockConfig().port(4010))
-                    .build();
+    private static final WireMockExtension wireMock = WireMockExtension.newInstance()
+            .options(wireMockConfig().dynamicPort())
+            .build();
 
     @PactBrokerConsumerVersionSelectors
     public static SelectorBuilder consumerVersionSelectors() {
-        return new SelectorBuilder();
+        return new SelectorBuilder()
+                .mainBranch();
     }
 
-    @SuppressWarnings("JUnitMalformedDeclaration")
     @BeforeEach
-    void setup(PactVerificationContext context){
-        context.setTarget(new HttpTestTarget("localhost", 4010, "/"));
+    void setup(PactVerificationContext context) {
+        context.setTarget(new HttpTestTarget("127.0.0.1", wireMock.getPort()));
     }
 
     @TestTemplate
     @ExtendWith(PactVerificationInvocationContextProvider.class)
-    void verify(PactVerificationContext context){
+    void verify(PactVerificationContext context) {
         context.verifyInteraction();
     }
 
