@@ -8,6 +8,7 @@ import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import au.com.dius.pact.provider.junitsupport.loader.PactBrokerConsumerVersionSelectors;
 // import au.com.dius.pact.provider.junitsupport.loader.PactFolder;
+import au.com.dius.pact.provider.junitsupport.loader.PactFolder;
 import au.com.dius.pact.provider.junitsupport.loader.SelectorBuilder;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
@@ -20,7 +21,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
 @Provider("oms-provider")
-@PactBroker(url = "http://127.0.0.1:9292", enablePendingPacts = "true", providerBranch = "main", includeWipPactsSince = "2026-06-26")
+@PactFolder("target/pacts")
+//        url = "http://127.0.0.1:9292", enablePendingPacts = "true",
+//        providerBranch = "main", includeWipPactsSince = "2026-06-26")
 public class OmsProviderVerification {
 
     @RegisterExtension
