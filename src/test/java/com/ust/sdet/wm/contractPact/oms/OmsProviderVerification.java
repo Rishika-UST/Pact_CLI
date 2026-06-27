@@ -6,14 +6,31 @@ import au.com.dius.pact.provider.junit5.PactVerificationInvocationContextProvide
 import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
+import au.com.dius.pact.provider.junitsupport.loader.PactBrokerConsumerVersionSelectors;
+import au.com.dius.pact.provider.junitsupport.loader.SelectorBuilder;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
 
 @Provider("oms-provider")
 @PactBroker(url = "http://localhost:9292")
 public class OmsProviderVerification {
+
+    @RegisterExtension
+    private static final WireMockExtension wireMock =
+            WireMockExtension.newInstance()
+                    .options(wireMockConfig().port(4010))
+                    .build();
+
+    @PactBrokerConsumerVersionSelectors
+    public static SelectorBuilder consumerVersionSelectors() {
+        return new SelectorBuilder();
+    }
 
     @SuppressWarnings("JUnitMalformedDeclaration")
     @BeforeEach
