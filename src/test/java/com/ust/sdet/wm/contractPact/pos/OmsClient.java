@@ -1,5 +1,6 @@
 package com.ust.sdet.wm.contractPact.pos;
 
+
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
@@ -13,27 +14,24 @@ public class OmsClient {
         this.baseUrl = baseUrl;
     }
 
-    public Order createOrder(Order order) {
+    public CreateOrderResponse createOrder(CreateOrderRequest order) {
 
         return given()
                 .baseUri(baseUrl)
                 .contentType(ContentType.JSON)
                 .body(order)
-
                 .when()
                 .post("/order")
-
                 .then()
                 .statusCode(201)
                 .extract()
-                .as(Order.class);
+                .as(CreateOrderResponse.class);
     }
 
     public Order getOrder(int orderId) {
 
         Response response = given()
                 .baseUri(baseUrl)
-
                 .when()
                 .get("/order/" + orderId);
 
@@ -43,10 +41,22 @@ public class OmsClient {
     }
 
     public record Order(
-            int statuscode,
+            int id,
+            String status,
+            double total
+    ) {}
+
+    public record CreateOrderRequest(
+            int statusCode,
             int orderId,
             String status,
             double total
-    ) {
-    }
+    ) {}
+
+    public record CreateOrderResponse(
+            int statusCode,
+            int orderId,
+            String status,
+            double total
+    ) {}
 }
